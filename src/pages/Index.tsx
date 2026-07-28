@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Menu, ChefHat, LogIn, LogOut } from "lucide-react";
 import type { Recipe } from "@/types";
-import { getRecipes, createRecipe, deleteRecipe } from "@/api";
+import { getRecipes, createRecipe, deleteRecipe, updateRecipe } from "@/api";
 import { useAuth } from "@/hooks/useAuth";
 import { RecipeList } from "@/components/RecipeList";
 import { RecipeDetail } from "@/components/RecipeDetail";
@@ -64,6 +64,15 @@ const Index = () => {
     const newRecipe = await createRecipe(name);
     setRecipes((prev) => [...prev, newRecipe].sort((a, b) => a.name.localeCompare(b.name)));
     setSelectedRecipe(newRecipe);
+  };
+
+  const handleRename = async (recipeId: number, newName: string) => {
+    const updated = await updateRecipe(recipeId, newName);
+    setRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? updated : r)).sort((a, b) => a.name.localeCompare(b.name))
+    );
+    setSelectedRecipe((prev) => (prev?.id === recipeId ? updated : prev));
+    showSuccess(`Renamed to "${newName}"`);
   };
 
   const handleDeleteConfirm = async () => {
@@ -167,6 +176,7 @@ const Index = () => {
             recipe={selectedRecipe}
             isAuthenticated={isAuthenticated}
             onLoginRequired={() => setLoginOpen(true)}
+            onRecipeRename={handleRename}
           />
         </main>
       </div>

@@ -1,5 +1,5 @@
-import { Plus, Loader2, ChefHat, Lock } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { Plus, Loader2, ChefHat, Lock, Pencil } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Recipe, Note } from "@/types";
 import { getNotes, createNote, updateNote, deleteNote } from "@/api";
 import { NoteCard } from "./NoteCard";
@@ -10,14 +10,32 @@ interface RecipeDetailProps {
   recipe: Recipe | null;
   isAuthenticated: boolean;
   onLoginRequired: () => void;
+  onRecipeRename?: (recipeId: number, newName: string) => Promise<void>;
 }
 
-export function RecipeDetail({ recipe, isAuthenticated, onLoginRequired }: RecipeDetailProps) {
+export function RecipeDetail({ recipe, isAuthenticated, onLoginRequired, onRecipeRename }: RecipeDetailProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(recipe?.name ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (recipe) {
+      setNameValue(recipe.name);
+    }
+  }, [recipe]);
+
+  useEffect(() => {
+    if (editingName && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingName]);
 
   const loadNotes = useCallback(async () => {
     if (!recipe) return;
@@ -42,6 +60,21 @@ export function RecipeDetail({ recipe, isAuthenticated, onLoginRequired }: Recip
   }, [recipe, loadNotes]);
 
   if (!recipe) return <EmptyState />;
+
+  const handleRename = async () => {
+    const trimmed = nameValue.trim();
+    if (!trimmed || trimmed === recipe.name) {
+      setNameValue(recipe.name);
+      setEditingName(false);
+      return;
+    }
+    try {
+      await onRecipeRename?.(recipe.id, trimmed);
+    } catch {
+      setNameValue(recipe.name);
+    }
+    setEditingName(false);
+  };
 
   const handleCreate = async (content: string) => {
     const note = await createNote(recipe.id, content);
@@ -83,16 +116,44 @@ export function RecipeDetail({ recipe, isAuthenticated, onLoginRequired }: Recip
   return (
     <div className="flex flex-col h-full">
       <div className="px-8 py-6 border-b border-[#E8D5C4] flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ChefHat className="w-6 h-6 text-[#B2503E]" strokeWidth={1.5} />
-          <h1 className="font-serif text-2xl text-[#5D4E37] font-medium">
-            {recipe.name}
-          </h1>
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <ChefHat className="w-6 h-6 text-[#B2503E] shrink-0" strokeWidth={1.5} />
+          {editingName ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={handleRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleRename();
+                if (e.key === "Escape") {
+                  setNameValue(recipe.name);
+                  setEditingName(false);
+                }
+              }}
+              className="font-serif text-2xl text-[#5D4E37] font-medium bg-transparent border-b-2 border-[#B2503E] outline-none min-w-0"
+              style={{ width: `${Math.max(nameValue.length + 2, 10)}ch` }}
+            />
+          ) : (
+            <h1 className="font-serif text-2xl text-[#5D4E37] font-medium truncate">
+              {recipe.name}
+            </h1>
+          )}
+          {isAuthenticated && !editingName && (
+            <button
+              onClick={() => setEditingName(true)}
+              className="p-1 rounded-lg text-[#C4A88B] hover:text-[#B2503E] hover:bg-[#FDF6F0] transition-colors shrink-0"
+              aria-label="Edit recipe name"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
         </div>
         {isAuthenticated ? (
           <button
             onClick={openEditor}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#B2503E] text-white rounded-xl hover:bg-[#9A4535] transition-colors text-sm font-medium shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#B2503E] text-white rounded-xl hover:bg-[#9A4535] transition-colors text-sm font-medium shadow-sm shrink-0 ml-4"
           >
             <Plus className="w-4 h-4" />
             New Note
@@ -100,7 +161,7 @@ export function RecipeDetail({ recipe, isAuthenticated, onLoginRequired }: Recip
         ) : (
           <button
             onClick={() => onLoginRequired()}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-[#8B7355] border border-[#E8D5C4] hover:border-[#B2503E]/30 hover:text-[#B2503E] hover:bg-[#FDF6F0] transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-[#8B7355] border border-[#E8D5C4] hover:border-[#B2503E]/30 hover:text-[#B2503E] hover:bg-[#FDF6F0] transition-colors font-medium shrink-0 ml-4"
           >
             <Lock className="w-3.5 h-3.5" />
             Sign in to write

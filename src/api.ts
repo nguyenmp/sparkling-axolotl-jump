@@ -27,6 +27,14 @@ export async function createRecipe(name: string): Promise<Recipe> {
   });
 }
 
+export async function updateRecipe(id: number, name: string): Promise<Recipe> {
+  return fetchJSON<Recipe>(`${BASE}/recipes/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+}
+
 export async function deleteRecipe(id: number): Promise<void> {
   await fetchJSON<void>(`${BASE}/recipes/${id}`, { method: "DELETE" });
 }
