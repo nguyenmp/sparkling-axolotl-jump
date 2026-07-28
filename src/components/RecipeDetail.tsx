@@ -1,4 +1,4 @@
-import { Plus, Loader2, ChefHat } from "lucide-react";
+import { Plus, Loader2, ChefHat, Lock } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import type { Recipe, Note } from "@/types";
 import { getNotes, createNote, updateNote, deleteNote } from "@/api";
@@ -8,9 +8,11 @@ import { EmptyState } from "./EmptyState";
 
 interface RecipeDetailProps {
   recipe: Recipe | null;
+  isAuthenticated: boolean;
+  onLoginRequired: () => void;
 }
 
-export function RecipeDetail({ recipe }: RecipeDetailProps) {
+export function RecipeDetail({ recipe, isAuthenticated, onLoginRequired }: RecipeDetailProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -61,11 +63,19 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
   };
 
   const openEditor = () => {
+    if (!isAuthenticated) {
+      onLoginRequired();
+      return;
+    }
     setEditingNote(null);
     setEditorOpen(true);
   };
 
   const openEdit = (note: Note) => {
+    if (!isAuthenticated) {
+      onLoginRequired();
+      return;
+    }
     setEditingNote(note);
     setEditorOpen(true);
   };
@@ -79,13 +89,23 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
             {recipe.name}
           </h1>
         </div>
-        <button
-          onClick={openEditor}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#B2503E] text-white rounded-xl hover:bg-[#9A4535] transition-colors text-sm font-medium shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          New Note
-        </button>
+        {isAuthenticated ? (
+          <button
+            onClick={openEditor}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#B2503E] text-white rounded-xl hover:bg-[#9A4535] transition-colors text-sm font-medium shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New Note
+          </button>
+        ) : (
+          <button
+            onClick={() => onLoginRequired()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-[#8B7355] border border-[#E8D5C4] hover:border-[#B2503E]/30 hover:text-[#B2503E] hover:bg-[#FDF6F0] transition-colors font-medium"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Sign in to write
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-8">
@@ -115,12 +135,22 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
               Start journaling about this recipe — jot down tweaks, memories,
               or how it turned out.
             </p>
-            <button
-              onClick={openEditor}
-              className="px-5 py-2.5 bg-[#B2503E] text-white rounded-xl hover:bg-[#9A4535] transition-colors text-sm font-medium"
-            >
-              Write your first note
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={openEditor}
+                className="px-5 py-2.5 bg-[#B2503E] text-white rounded-xl hover:bg-[#9A4535] transition-colors text-sm font-medium"
+              >
+                Write your first note
+              </button>
+            ) : (
+              <button
+                onClick={() => onLoginRequired()}
+                className="flex items-center gap-2 px-5 py-2.5 border border-[#E8D5C4] text-[#8B7355] rounded-xl hover:border-[#B2503E]/30 hover:text-[#B2503E] hover:bg-[#FDF6F0] transition-colors text-sm font-medium"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Sign in to write
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -128,6 +158,7 @@ export function RecipeDetail({ recipe }: RecipeDetailProps) {
               <NoteCard
                 key={note.id}
                 note={note}
+                isAuthenticated={isAuthenticated}
                 onEdit={openEdit}
                 onDelete={handleDelete}
               />

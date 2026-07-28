@@ -42,3 +42,22 @@ export async function updateNote(noteId: number, content_markdown: string): Prom
 export async function deleteNote(noteId: number): Promise<void> {
   await fetchJSON<void>(`${BASE}/notes/${noteId}`, { method: "DELETE" });
 }
+
+// --- Auth ---
+
+export async function checkAuth(): Promise<boolean> {
+  const res = await fetchJSON<{ authenticated: boolean }>(`${BASE}/auth/me`);
+  return res.authenticated;
+}
+
+export async function login(password: string): Promise<void> {
+  await fetchJSON(`${BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function logout(): Promise<void> {
+  await fetchJSON(`${BASE}/auth/logout`, { method: "POST" });
+}

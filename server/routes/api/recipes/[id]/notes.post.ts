@@ -1,8 +1,11 @@
 import { defineHandler } from "nitro";
 import { readBody, getRouterParam, createError } from "nitro/h3";
 import { getPool } from "../../../../db";
+import { requireAuth } from "../../../../auth";
 
 export default defineHandler(async (event) => {
+  requireAuth(event);
+
   const recipeId = getRouterParam(event, "id");
   if (!recipeId) throw createError({ statusCode: 400, statusMessage: "id is required" });
 

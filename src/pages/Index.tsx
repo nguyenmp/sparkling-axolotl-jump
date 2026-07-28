@@ -1,16 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
-import { Menu, ChefHat } from "lucide-react";
+import { Menu, ChefHat, LogIn, LogOut } from "lucide-react";
 import type { Recipe } from "@/types";
 import { getRecipes } from "@/api";
+import { useAuth } from "@/hooks/useAuth";
 import { RecipeList } from "@/components/RecipeList";
 import { RecipeDetail } from "@/components/RecipeDetail";
+import { LoginModal } from "@/components/LoginModal";
 
 const Index = () => {
+  const { isAuthenticated, isChecking, logout } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   const loadRecipes = useCallback(async () => {
     setLoading(true);
@@ -44,13 +48,34 @@ const Index = () => {
             Recipe Journal
           </h1>
         </div>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-xl text-[#8B7355] hover:text-[#5D4E37] hover:bg-[#FDF6F0] transition-colors lg:hidden"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {!isChecking && (
+            isAuthenticated ? (
+              <button
+                onClick={logout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm text-[#8B7355] hover:text-[#5D4E37] hover:bg-[#FDF6F0] transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setLoginOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm text-[#B2503E] hover:text-white hover:bg-[#B2503E] transition-colors border border-[#B2503E]/20 hover:border-[#B2503E]"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign in</span>
+              </button>
+            )
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-xl text-[#8B7355] hover:text-[#5D4E37] hover:bg-[#FDF6F0] transition-colors lg:hidden"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Body */}
@@ -91,9 +116,15 @@ const Index = () => {
 
         {/* Main content */}
         <main className="flex-1 min-w-0 bg-[#FFFDF9] overflow-hidden">
-          <RecipeDetail recipe={selectedRecipe} />
+          <RecipeDetail
+            recipe={selectedRecipe}
+            isAuthenticated={isAuthenticated}
+            onLoginRequired={() => setLoginOpen(true)}
+          />
         </main>
       </div>
+
+      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
     </div>
   );
 };
