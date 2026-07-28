@@ -19,6 +19,14 @@ export async function getRecipe(id: number): Promise<Recipe> {
   return fetchJSON<Recipe>(`${BASE}/recipes/${id}`);
 }
 
+export async function createRecipe(name: string): Promise<Recipe> {
+  return fetchJSON<Recipe>(`${BASE}/recipes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+}
+
 export async function getNotes(recipeId: number): Promise<Note[]> {
   return fetchJSON<Note[]>(`${BASE}/recipes/${recipeId}/notes`);
 }

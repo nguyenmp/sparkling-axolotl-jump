@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Menu, ChefHat, LogIn, LogOut } from "lucide-react";
 import type { Recipe } from "@/types";
-import { getRecipes } from "@/api";
+import { getRecipes, createRecipe } from "@/api";
 import { useAuth } from "@/hooks/useAuth";
 import { RecipeList } from "@/components/RecipeList";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { LoginModal } from "@/components/LoginModal";
+import { CreateRecipeModal } from "@/components/CreateRecipeModal";
 
 const Index = () => {
   const { isAuthenticated, isChecking, logout } = useAuth();
@@ -15,6 +16,7 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const loadRecipes = useCallback(async () => {
     setLoading(true);
@@ -36,6 +38,20 @@ const Index = () => {
   const handleSelect = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setSidebarOpen(false);
+  };
+
+  const handleNewRecipe = () => {
+    if (!isAuthenticated) {
+      setLoginOpen(true);
+      return;
+    }
+    setCreateOpen(true);
+  };
+
+  const handleCreate = async (name: string) => {
+    const newRecipe = await createRecipe(name);
+    setRecipes((prev) => [...prev, newRecipe].sort((a, b) => a.name.localeCompare(b.name)));
+    setSelectedRecipe(newRecipe);
   };
 
   return (
@@ -110,6 +126,7 @@ const Index = () => {
               selectedId={selectedRecipe?.id ?? null}
               onSelect={handleSelect}
               loading={loading}
+              onNewRecipe={handleNewRecipe}
             />
           )}
         </aside>
@@ -125,6 +142,7 @@ const Index = () => {
       </div>
 
       <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
+      <CreateRecipeModal open={createOpen} onOpenChange={setCreateOpen} onCreate={handleCreate} />
     </div>
   );
 };

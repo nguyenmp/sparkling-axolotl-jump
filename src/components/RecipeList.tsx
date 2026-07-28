@@ -1,4 +1,4 @@
-import { Search, ChefHat } from "lucide-react";
+import { Search, ChefHat, Plus } from "lucide-react";
 import { useState } from "react";
 import type { Recipe } from "@/types";
 
@@ -7,9 +7,10 @@ interface RecipeListProps {
   selectedId: number | null;
   onSelect: (recipe: Recipe) => void;
   loading: boolean;
+  onNewRecipe: () => void;
 }
 
-export function RecipeList({ recipes, selectedId, onSelect, loading }: RecipeListProps) {
+export function RecipeList({ recipes, selectedId, onSelect, loading, onNewRecipe }: RecipeListProps) {
   const [search, setSearch] = useState("");
 
   const filtered = recipes.filter((r) =>
@@ -19,9 +20,18 @@ export function RecipeList({ recipes, selectedId, onSelect, loading }: RecipeLis
   return (
     <div className="flex flex-col h-full">
       <div className="p-5 border-b border-[#E8D5C4]">
-        <div className="flex items-center gap-2.5 mb-4">
-          <ChefHat className="w-5 h-5 text-[#B2503E]" strokeWidth={1.5} />
-          <h2 className="font-serif text-lg text-[#5D4E37] font-medium">Recipes</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <ChefHat className="w-5 h-5 text-[#B2503E]" strokeWidth={1.5} />
+            <h2 className="font-serif text-lg text-[#5D4E37] font-medium">Recipes</h2>
+          </div>
+          <button
+            onClick={onNewRecipe}
+            className="p-1.5 rounded-lg text-[#C4A88B] hover:text-[#B2503E] hover:bg-[#FDF6F0] transition-colors"
+            aria-label="New recipe"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#C4A88B]" />
