@@ -1,6 +1,6 @@
 import { defineHandler } from "nitro";
 import { getRouterParam, createError } from "nitro/h3";
-import { getPool } from "../../../db";
+import { getPool } from "../../../../db";
 
 export default defineHandler(async (event) => {
   const recipeId = getRouterParam(event, "id");
