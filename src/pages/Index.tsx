@@ -1,12 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { Menu, ChefHat, LogIn, LogOut } from "lucide-react";
 import type { Recipe } from "@/types";
-import { getRecipes, createRecipe } from "@/api";
+import { getRecipes, createRecipe, deleteRecipe } from "@/api";
 import { useAuth } from "@/hooks/useAuth";
 import { RecipeList } from "@/components/RecipeList";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { LoginModal } from "@/components/LoginModal";
 import { CreateRecipeModal } from "@/components/CreateRecipeModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { showError, showSuccess } from "@/utils/toast";
 
 const Index = () => {
   const { isAuthenticated, isChecking, logout } = useAuth();
@@ -17,6 +28,7 @@ const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Recipe | null>(null);
 
   const loadRecipes = useCallback(async () => {
     setLoading(true);
@@ -52,6 +64,22 @@ const Index = () => {
     const newRecipe = await createRecipe(name);
     setRecipes((prev) => [...prev, newRecipe].sort((a, b) => a.name.localeCompare(b.name)));
     setSelectedRecipe(newRecipe);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteRecipe(deleteTarget.id);
+      setRecipes((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      if (selectedRecipe?.id === deleteTarget.id) {
+        setSelectedRecipe(null);
+      }
+      showSuccess(`"${deleteTarget.name}" deleted`);
+    } catch {
+      showError("Failed to delete recipe");
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -127,6 +155,8 @@ const Index = () => {
               onSelect={handleSelect}
               loading={loading}
               onNewRecipe={handleNewRecipe}
+              onDeleteRecipe={setDeleteTarget}
+              isAuthenticated={isAuthenticated}
             />
           )}
         </aside>
@@ -143,6 +173,28 @@ const Index = () => {
 
       <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       <CreateRecipeModal open={createOpen} onOpenChange={setCreateOpen} onCreate={handleCreate} />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent className="rounded-2xl border-[#E8D5C4] bg-[#FFFBF7]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-[#5D4E37]">Delete recipe?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#A69485]">
+              This will permanently delete <strong className="text-[#5D4E37]">"{deleteTarget?.name}"</strong> and all of its notes. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl border-[#E8D5C4] text-[#8B7355] hover:text-[#5D4E37] hover:bg-[#FDF6F0]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

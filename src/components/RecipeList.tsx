@@ -1,4 +1,4 @@
-import { Search, ChefHat, Plus } from "lucide-react";
+import { Search, ChefHat, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Recipe } from "@/types";
 
@@ -8,9 +8,11 @@ interface RecipeListProps {
   onSelect: (recipe: Recipe) => void;
   loading: boolean;
   onNewRecipe: () => void;
+  onDeleteRecipe: (recipe: Recipe) => void;
+  isAuthenticated: boolean;
 }
 
-export function RecipeList({ recipes, selectedId, onSelect, loading, onNewRecipe }: RecipeListProps) {
+export function RecipeList({ recipes, selectedId, onSelect, loading, onNewRecipe, onDeleteRecipe, isAuthenticated }: RecipeListProps) {
   const [search, setSearch] = useState("");
 
   const filtered = recipes.filter((r) =>
@@ -58,17 +60,33 @@ export function RecipeList({ recipes, selectedId, onSelect, loading, onNewRecipe
         ) : (
           <div className="py-2">
             {filtered.map((recipe) => (
-              <button
+              <div
                 key={recipe.id}
-                onClick={() => onSelect(recipe)}
-                className={`w-full text-left px-5 py-3 transition-colors text-sm ${
+                className={`group flex items-center justify-between px-5 py-3 transition-colors text-sm cursor-pointer ${
                   selectedId === recipe.id
                     ? "bg-[#B2503E]/10 text-[#B2503E] font-medium border-r-2 border-[#B2503E]"
                     : "text-[#5D4E37] hover:bg-[#FDF6F0] border-r-2 border-transparent"
                 }`}
               >
-                <div className="truncate">{recipe.name}</div>
-              </button>
+                <button
+                  onClick={() => onSelect(recipe)}
+                  className="flex-1 text-left truncate"
+                >
+                  {recipe.name}
+                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteRecipe(recipe);
+                    }}
+                    className="p-1 rounded-lg text-[#C4A88B] hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ml-2"
+                    aria-label={`Delete ${recipe.name}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}
