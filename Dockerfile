@@ -7,6 +7,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm config set onlyBuiltDependencies "@swc/core esbuild" --location project
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
