@@ -1,7 +1,7 @@
 import { defineHandler } from "nitro";
 import { readBody, createError } from "nitro/h3";
-import { getPool } from "../../../db";
-import { requireAuth } from "../../../auth";
+import { getPool } from "../../db";
+import { requireAuth } from "../../auth";
 
 export default defineHandler(async (event) => {
   requireAuth(event);
