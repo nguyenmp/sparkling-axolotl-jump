@@ -1,15 +1,15 @@
-FROM node:22-alpine AS build
+FROM node:22-alpine
 
 WORKDIR /app
 
 # Enable pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy dependency files
+# Copy dependency manifests
 COPY package.json pnpm-lock.yaml ./
 
-# Configure pnpm to allow build scripts for @swc/core and esbuild
-RUN printf 'pnpm.allowedBuiltDependencies[]=@swc/core\npnpm.allowedBuiltDependencies[]=esbuild\n' > .npmrc
+# Configure pnpm to allow build scripts for required packages
+RUN printf 'pnpm.onlyBuiltDependencies[]=@swc/core\npnpm.onlyBuiltDependencies[]=esbuild\n' > .npmrc
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -17,21 +17,11 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application
-RUN pnpm run build
+# Build the app
+RUN pnpm build:dev
 
-# Production image
-FROM node:22-alpine
-
-WORKDIR /app
-
-# Copy built assets and server
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/server ./server
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./
-COPY --from=build /app/nitro.config.ts ./nitro.config.ts
-
+# Expose the port
 EXPOSE 8080
 
-CMD ["node", "server/index.mjs"]
+# Start the server
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
