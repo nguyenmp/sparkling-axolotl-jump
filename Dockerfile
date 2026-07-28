@@ -1,5 +1,5 @@
 # ---- Build Stage ----
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 # Enable pnpm
@@ -16,7 +16,7 @@ COPY . .
 RUN pnpm run build
 
 # ---- Production Stage ----
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
