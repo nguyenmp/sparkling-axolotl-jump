@@ -9,6 +9,7 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: ["recipes.apps.href.cat"],
   },
   plugins: [dyadComponentTagger(), react(), nitro()],
   resolve: {
