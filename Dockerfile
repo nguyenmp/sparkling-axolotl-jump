@@ -6,10 +6,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy dependency manifests
-COPY package.json pnpm-lock.yaml ./
-
-# Configure pnpm to allow build scripts for required packages
-RUN printf 'pnpm.onlyBuiltDependencies[]=@swc/core\npnpm.onlyBuiltDependencies[]=esbuild\n' > .npmrc
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
